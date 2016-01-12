@@ -30,7 +30,7 @@ sub RemoveRedErrors
 	#Holds the Replacment Code per Snippit
 	my $ReplacmentCode = "";
 	#load all Snippits from XML
-	my %SnippitHash = %{$XmlData->{Snippit}};
+	my %SnippitHash = %{$XmlData->{Snippet}};
 	# If input argument is == 0
 	if(!$_[0])
 	{
@@ -44,6 +44,7 @@ sub RemoveRedErrors
 			$SnippitArray[$index][3] =  scalar $element;
 			$SnippitArray[$index][4] =  scalar $SnippitHash{$element}->{File};
 			$SnippitArray[$index][5] = 0;
+			$SnippitArray[$index][6] = scalar $SnippitHash{$element}->{Include};
 			$index++;
 		}
     $index = 0;
@@ -51,11 +52,11 @@ sub RemoveRedErrors
 	foreach my $Snippit (@SnippitArray)
 	{	
 		#If the the Current snippit belongs to the current file AND this snippit is not yet replaced in code
-		if(($Snippit->[5] == 0) && ($Snippit->[4] eq $FILE_NAME))
+		if(($Snippit->[5] == 0) && ($Snippit->[4] eq $FILE_NAME) && ($Snippit->[6] eq "YES"))
 		{
 			# Replace Code
 			$ReplacmentCode = $Snippit->[1] . "  /* " . $Snippit->[2] . " -> " . " Snippit # " . $Snippit->[3] . " */";
-			$MatchCount = () = $wholeFile =~ s/\Q$Snippit->[0]\E/$ReplacmentCode/g;
+			$MatchCount = () = $wholeFile =~ s/\b\Q$Snippit->[0]\E\b/$ReplacmentCode/g;
 			$SnippitArray[$index][5] = $MatchCount;
 		}
 		$index++
@@ -99,7 +100,7 @@ sub ConcatenateFileLines
 	my @TempLines;
 	#Initialize the global string that will hold all lines in file
 	$wholeFile = "";
-	open (FILE_DB, 'C:\PVCS-workspace\VSC_CORE_TEAM\07-Process Improvement\16-Polyspace Run\Input.pm')
+	open (FILE_DB, 'Input.ci')
 	or die "Cannot open File_names file" ;
 	#Load Lines from inpt stream
 	while (my $line = <FILE_DB>)							# As long as there is an input to the script.
@@ -1333,7 +1334,7 @@ sub ToString
 sub main()
 {
 	# Load XML file Containning Snippits to be repalced
-	$XmlData = $Snippits->XMLin("Red_Errors.xml", KeyAttr => {Snippit => 'SnippitID'});
+	$XmlData = $Snippits->XMLin("SnptData.xml", KeyAttr => {Snippet => 'SnippitID'});
 	# First Load all lines to 1 big string.
 	ConcatenateFileLines();
 	# Replace the User defined Code using Snippits loaded from XML
